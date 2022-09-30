@@ -1,52 +1,32 @@
-import { ConnectWallet } from "@thirdweb-dev/react";
-import styles from "../styles/Home.module.css";
+import { ConnectWallet, useAddress, useContract } from "@thirdweb-dev/react";
+import { useState } from "react";
 
 export default function Home() {
+  const [amount, setAmount] = useState(0);
+  const address = useAddress();
+  const { contract } = useContract("0x22fC4B8B825014267b03be1995Df41cf5Fb1B387");
+  const mint = async() => {
+    const signedPayloadReq = await fetch("/api/generate-signature", {
+      method: "POST",
+      body: JSON.stringify({ address, amount }),
+    });
+
+    const { signedPayload } = await signedPayloadReq.json()
+
+    try{
+      await contract.erc721.signature.mint(signedPayload);
+    } catch(error) {
+      console.error(error);
+    }
+  };
+
   return (
-    <div className={styles.container}>
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://thirdweb.com/">thirdweb</a>!
-        </h1>
-
-        <p className={styles.description}>
-          Get started by configuring your desired network in{" "}
-          <code className={styles.code}>pages/_app.js</code>, then modify the{" "}
-          <code className={styles.code}>pages/index.js</code> file!
-        </p>
-
-        <div className={styles.connect}>
-          <ConnectWallet />
-        </div>
-
-        <div className={styles.grid}>
-          <a href="https://portal.thirdweb.com/" className={styles.card}>
-            <h2>Portal &rarr;</h2>
-            <p>
-              Guides, references and resources that will help you build with
-              thirdweb.
-            </p>
-          </a>
-
-          <a href="https://thirdweb.com/dashboard" className={styles.card}>
-            <h2>Dashboard &rarr;</h2>
-            <p>
-              Deploy, configure and manage your smart contracts from the
-              dashboard.
-            </p>
-          </a>
-
-          <a
-            href="https://portal.thirdweb.com/templates"
-            className={styles.card}
-          >
-            <h2>Templates &rarr;</h2>
-            <p>
-              Discover and clone template projects showcasing thirdweb features.
-            </p>
-          </a>
-        </div>
-      </main>
+    <div>
+      <ConnectWallet accentColor="lime" colorMode="light" />
+      <p>price: 0.01 ETH</p>
+      <p>if you mint 2 or more, the price of each NFT will be 0.005 ETH</p>
+      <input type="number" onChange={e => setAmount(e.target.value)} value={amount}  />
+      <button onClick={mint}>Mint</button>
     </div>
   );
 }
